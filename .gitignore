@@ -1,0 +1,12 @@
+# Arquivos gerados pelo Python (não precisam ser versionados)
+dimensionamento_eletrico.html
+chk.js
+check_js.js
+*.pyc
+__pycache__/
+
+# Arquivos temporários de diagnóstico
+diag*.py
+fix_*.py
+verify_*.py
+app_js*.js
