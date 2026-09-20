@@ -658,8 +658,8 @@ function calcular(){
   cargas.forEach(function(c,i){
     var tipoC=c.tipoCarga||'motor';
     var ehMotor=(tipoC==='motor');
-    var fp_c=ehMotor?Math.max(0.15,Math.min(1.00,c.fp||0.85)):(tipoC==='resistiva'?1.00:fpGlobal);
-    var rend_c=ehMotor&&c.modo==='potencia'?Math.max(0.10,Math.min(1.00,(c.rend||90)/100)):1.0;
+    var fp_c=ehMotor?Math.max(0.15,Math.min(1.00,c.fp||0.85)):0.97;
+    var rend_c=ehMotor&&c.modo==='potencia'?Math.max(0.10,Math.min(1.00,(c.rend||90)/100)):0.97;
 
     var I_c=0,P_c=0,especStr='';
     if(c.modo==='potencia'){
