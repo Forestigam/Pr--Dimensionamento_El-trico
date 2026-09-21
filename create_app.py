@@ -1170,7 +1170,7 @@ async function gerarPDF(){
       + '<div style="font-size:1.05rem;font-weight:bold;color:#1e293b;border-bottom:1px solid #cbd5e1;padding-bottom:4px;margin:18px 0 10px">1. Parecer T\u00e9cnico</div>'
       + '<div class="'+(parecerAtende?'pb-atende':'pb-reprov')+'">'+parecerHTML+'</div>'
       + '<div style="font-size:1.05rem;font-weight:bold;color:#1e293b;border-bottom:1px solid #cbd5e1;padding-bottom:4px;margin:18px 0 10px">2. Mem\u00f3ria de C\u00e1lculo Detalhada</div>'
-      + '<pre>'+memoriaGlobal+'</pre>'
+      + '<pre>'+memoriaGlobal.replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</pre>'
       + '<div style="margin-top:30px;border-top:1px solid #cbd5e1;padding-top:10px;font-size:.75rem;color:#64748b;display:flex;justify-content:space-between">'
       + '<div>Aviso: pr\u00e9-dimensionamento, n\u00e3o substitui projeto de Engenheiro habilitado.</div>'
       + '<div>Data: '+dataHoje+'</div></div>'
