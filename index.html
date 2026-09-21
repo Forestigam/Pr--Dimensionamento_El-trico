@@ -23,6 +23,29 @@ header{background:linear-gradient(135deg,rgba(30,41,59,.9),rgba(15,23,42,.95));b
 .badge-norma{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:var(--accent-cyan);padding:6px 14px;border-radius:20px;font-size:.8rem;font-weight:600;letter-spacing:.5px}
 .grid-2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:24px}
 @media(max-width:900px){.grid-2{grid-template-columns:1fr}}
+@media(max-width:600px){
+  body{padding:10px 6px;overflow-x:hidden}
+  .container{gap:14px}
+  header{padding:14px;gap:10px;border-radius:12px}
+  .brand-icon{width:38px;height:38px;font-size:18px;flex-shrink:0}
+  .brand-text h1{font-size:1.1rem}
+  .brand-text p{font-size:.75rem}
+  .badge-norma{font-size:.72rem;padding:4px 10px}
+  .panel{padding:14px;border-radius:12px}
+  .panel-title{font-size:1rem;margin-bottom:14px}
+  .form-row{grid-template-columns:1fr!important;gap:10px}
+  .metrics-grid{grid-template-columns:repeat(2,1fr)!important;gap:8px}
+  .metric-card{padding:10px}
+  .metric-value{font-size:1.1rem}
+  .range-container input[type=number]{width:65px}
+  .btn{font-size:.85rem;padding:10px 14px}
+  .btn-primary{font-size:.95rem;padding:13px}
+  table{font-size:.75rem}
+  th,td{padding:7px 5px}
+  .load-card{padding:12px}
+  .panel-title-text{gap:6px}
+  footer{font-size:.75rem;padding:12px}
+}
 .panel{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:16px;padding:24px;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.3)}
 .panel-title{font-size:1.1rem;font-weight:600;color:#fff;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:12px}
 .panel-title-text{display:flex;align-items:center;gap:10px}
@@ -135,7 +158,7 @@ footer{background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.06);borde
       </div>
     </div>
 
-    <div id="alWarning" class="al-warning">&#9888; <strong>NBR 5410 §6.2.7.1:</strong> Condutores de alumínio não são permitidos para seções inferiores a 16 mm². As bitolas menores serão filtradas automaticamente nos resultados.</div>
+    <div id="alWarning" class="al-warning">&#9888; <strong>NBR 5410:</strong> Condutores de alumínio não são permitidos para seções inferiores a 16 mm². As bitolas menores serão filtradas automaticamente nos resultados.</div>
 
     <div class="form-row">
       <div class="form-group">
@@ -163,7 +186,7 @@ footer{background:rgba(15,23,42,.6);border:1px solid rgba(255,255,255,.06);borde
     <div class="form-row">
       <div class="form-group">
         <label>Distância do Circuito (m) <span class="help-icon" title="Comprimento do circuito em metros — somente números inteiros">&#9432;</span></label>
-        <input type="number" id="distancia" value="30" min="1" step="1" oninput="validarDistanciaInteira(this)" onchange="resetCalculado()">
+        <input type="number" id="distancia" value="30" min="1" step="1" inputmode="numeric" oninput="filtrarSomenteDigitos(this)" onblur="finalizarDistancia(this)" onchange="resetCalculado()">
       </div>
       <div class="form-group">
         <label>Método de Instalação <span class="help-icon" title="B1 = Eletroduto embutido | B2 = Eletroduto sobreposto | C = Cabo fixado em parede/bandeja | D = Eletroduto enterrado">&#9432;</span></label>
@@ -396,10 +419,18 @@ var estadoFases='mono', cargas=[], contadorId=1, memoriaGlobal='', parecerGlobal
 /* =====================================================================
    HELPERS
    ===================================================================== */
-function validarDistanciaInteira(el){
-  var v=el.value.replace(/[^0-9]/g,'');
-  el.value=(!v||parseInt(v,10)<1)?'1':v;
+function filtrarSomenteDigitos(el){
+  // Permite apagar livremente — apenas remove caracteres não numéricos durante digitação
+  el.value=el.value.replace(/[^0-9]/g,'');
 }
+function finalizarDistancia(el){
+  // Valida mínimo somente ao sair do campo (onblur)
+  var v=parseInt(el.value,10);
+  if(isNaN(v)||v<1) el.value='1';
+  else el.value=v;
+  resetCalculado();
+}
+function validarDistanciaInteira(el){filtrarSomenteDigitos(el);}
 function setFases(f){estadoFases=f;var el=document.getElementById('numeroFases');if(el)el.value=f;resetCalculado();}
 function syncGlobalFP(src,val){
   var n=parseFloat(val);if(isNaN(n))n=0.85;
@@ -557,7 +588,7 @@ function renderCards(){
       var gPot=document.createElement('div');gPot.className='form-group';
       var lPot=document.createElement('label');lPot.textContent='Pot\u00eancia Nominal';
       var wPot=document.createElement('div');wPot.style.cssText='display:flex;gap:8px';
-      var iPot=document.createElement('input');iPot.type='number';iPot.value=potVal;iPot.min='0.01';iPot.step='0.01';iPot.style.flex='1';
+      var iPot=document.createElement('input');iPot.type='number';iPot.value=potVal;iPot.min='0.01';iPot.step='0.01';iPot.style.flex='1';iPot.inputMode='decimal';
       (function(cid){iPot.addEventListener('change',function(){atualizarCarga(cid,'valorPot',parseFloat(this.value)||0);});})(id);
       var sUni=document.createElement('select');sUni.style.width='80px';
       // Motor: W, kW, CV, HP — Resistiva/Geral: W, kW
@@ -579,7 +610,7 @@ function renderCards(){
 
     var gQtd=document.createElement('div');gQtd.className='form-group';
     var lQtd=document.createElement('label');lQtd.textContent='Quantidade';
-    var iQtd=document.createElement('input');iQtd.type='number';iQtd.value=qtdVal;iQtd.min='1';iQtd.step='1';
+    var iQtd=document.createElement('input');iQtd.type='number';iQtd.value=qtdVal;iQtd.min='1';iQtd.step='1';iQtd.inputMode='numeric';
     (function(cid){iQtd.addEventListener('change',function(){atualizarCarga(cid,'qtd',parseInt(this.value)||1);});})(id);
     gQtd.appendChild(lQtd);gQtd.appendChild(iQtd);rPot.appendChild(gQtd);
     card.appendChild(rPot);
