@@ -1185,16 +1185,6 @@ async function gerarPDF(){
       + '<div>Data: '+dataHoje+'</div></div>'
       + '</div></div>';
 
-    // Para evitar crop no celular, criamos o elemento, fixamos em 794px e o escondemos sob a tela
-    var tempDiv=document.createElement('div');
-    tempDiv.innerHTML=h;
-    var container=tempDiv.firstChild;
-    container.style.position='absolute';
-    container.style.top='0';
-    container.style.left='0';
-    container.style.zIndex='-9999';
-    document.body.appendChild(container);
-
     var dataArq=new Date().toISOString().split('T')[0];
     var nomeArquivo='dimensionamento-eletrico-'+dataArq+'.pdf';
 
@@ -1202,15 +1192,13 @@ async function gerarPDF(){
       margin:       10,
       filename:     nomeArquivo,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 794 },
+      html2canvas:  { scale: 2, useCORS: true },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    var worker=html2pdf().set(opt).from(container);
+    var worker=html2pdf().set(opt).from(h);
     var pdfBlob=await worker.output('blob');
-    
-    document.body.removeChild(container);
 
     var url=URL.createObjectURL(pdfBlob);
 
