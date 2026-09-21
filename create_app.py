@@ -1141,6 +1141,15 @@ async function gerarPDF(){
   btn.disabled=true;
   btn.innerHTML='&#8987; Gerando PDF...';
 
+  // Abre nova aba de forma sincrona para evitar bloqueio de popup
+  var newTab=null;
+  try{
+    newTab=window.open('','_blank');
+    if(newTab){
+      newTab.document.write('<div style="font-family:sans-serif;padding:20px;text-align:center">Gerando PDF, aguarde...</div>');
+    }
+  }catch(e){}
+
   try{
     if(typeof html2pdf==='undefined'){
       throw new Error('Biblioteca de PDF n\u00e3o carregada. Verifique sua conex\u00e3o.');
@@ -1159,7 +1168,7 @@ async function gerarPDF(){
       +'pre{background:#f1f5f9;padding:14px;font-family:Consolas,"Courier New",monospace;font-size:.78rem;white-space:pre-wrap;border-radius:6px;border:1px solid #e2e8f0;color:#0f172a;word-break:break-word}'
       +'</style>';
 
-    var h = '<div style="width:800px; max-width:800px; margin:0 auto; padding:20px; position:relative; background-color:#ffffff; color:#0f172a; font-family:\'Segoe UI\',Arial,sans-serif; line-height:1.6; box-sizing:border-box;">'
+    var h = '<div style="width:794px; padding:20px; position:relative; background-color:#ffffff; color:#0f172a; font-family:\'Segoe UI\',Arial,sans-serif; line-height:1.6; box-sizing:border-box;">'
       + styleBlock
       + '<img src="data:image/jpeg;base64,'+bgB64+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.05;z-index:0" alt="">'
       + '<div class="pdf-content">'
@@ -1176,40 +1185,38 @@ async function gerarPDF(){
       + '<div>Data: '+dataHoje+'</div></div>'
       + '</div></div>';
 
+    // Para evitar crop no celular, criamos o elemento, fixamos em 794px e o escondemos sob a tela
+    var tempDiv=document.createElement('div');
+    tempDiv.innerHTML=h;
+    var container=tempDiv.firstChild;
+    container.style.position='absolute';
+    container.style.top='0';
+    container.style.left='0';
+    container.style.zIndex='-9999';
+    document.body.appendChild(container);
+
     var dataArq=new Date().toISOString().split('T')[0];
     var nomeArquivo='dimensionamento-eletrico-'+dataArq+'.pdf';
 
     var opt={
-      margin:       10, // Diminuindo a margem já que tem padding interno de 20px
+      margin:       10,
       filename:     nomeArquivo,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+      html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 794 },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
-    var worker=html2pdf().set(opt).from(h);
+    var worker=html2pdf().set(opt).from(container);
     var pdfBlob=await worker.output('blob');
-    var pdfFile=new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
     
-    var compartilhou=false;
-    if(navigator.share && navigator.canShare){
-      try{
-        if(navigator.canShare({files:[pdfFile]})){
-          await navigator.share({
-            files: [pdfFile],
-            title: 'Relat\u00f3rio PDF - Dimensionamento El\u00e9trico',
-            text: 'Segue em anexo o relat\u00f3rio de pr\u00e9-dimensionamento el\u00e9trico.'
-          });
-          compartilhou=true;
-        }
-      }catch(err){
-        console.log('Compartilhamento falhou ou foi cancelado:', err);
-      }
-    }
+    document.body.removeChild(container);
 
-    if(!compartilhou){
-      var url=URL.createObjectURL(pdfBlob);
+    var url=URL.createObjectURL(pdfBlob);
+
+    if(newTab){
+      newTab.location.href=url;
+    }else{
       var a=document.createElement('a');
       a.style.display='none';
       a.href=url;
@@ -1227,6 +1234,7 @@ async function gerarPDF(){
 
   }catch(error){
     console.error('Erro ao gerar PDF:',error);
+    if(newTab) newTab.close();
     btn.innerHTML='&#10060; ERRO AO GERAR';
     alert('N\u00e3o foi poss\u00edvel gerar o PDF: '+error.message);
     setTimeout(function(){btn.innerHTML=btnTextOriginal;btn.disabled=false;},3000);
