@@ -16,6 +16,7 @@ HTML = r"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pré-Dimensionamento Elétrico — NBR 5410</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <style>
 /* =========================================================
    VARIÁVEIS E RESET
@@ -1132,43 +1133,119 @@ function toggleMemoria(){
   else{c.classList.add('show');a.innerHTML='&#9650;';}
 }
 
-function gerarPDF(){
-  var dataHoje=new Date().toLocaleDateString('pt-BR');
-  var bgB64=document.getElementById('bgBase64Store').value;
-  // Captura o HTML do parecer exatamente como exibido no app
-  var parecerHTML=document.getElementById('parecerTexto').innerHTML;
-  var parecerAtende=document.getElementById('parecerCard').classList.contains('atende');
-  var win=window.open('','_blank');
-  var h='<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">'
-    +'<title>Relat\u00f3rio Pr\u00e9-Dimensionamento El\u00e9trico NBR 5410</title>'
-    +'<style>@page{size:A4;margin:15mm}'
-    +'body{font-family:"Segoe UI",Arial,sans-serif;color:#0f172a;line-height:1.6;position:relative;background:#fff}'
-    +'body::before{content:"";position:fixed;inset:0;background-image:url("data:image/jpeg;base64,'+bgB64+'");background-size:cover;opacity:0.05;z-index:-1}'
-    +'.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #3b82f6;padding-bottom:12px;margin-bottom:20px}'
-    +'.ttl{font-size:1.4rem;font-weight:bold;color:#1e3a8a}'
-    +'.sub{font-size:.85rem;color:#475569}'
-    +'.st{font-size:1.05rem;font-weight:bold;color:#1e293b;border-bottom:1px solid #cbd5e1;padding-bottom:4px;margin:18px 0 10px}'
-    /* Parecer — visual idêntico ao app */
-    +'.pb-atende{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:#14532d}'
-    +'.pb-reprov{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:#7f1d1d}'
-    +'.parecer-aprovado-destaque{background:#dcfce7;border:2px solid #16a34a;border-radius:10px;padding:14px 18px;margin-top:12px;text-align:center;font-size:1.05rem;font-weight:700;color:#15803d;letter-spacing:.5px}'
-    +'pre{background:#f1f5f9;padding:14px;font-family:Consolas,"Courier New",monospace;font-size:.78rem;white-space:pre-wrap;border-radius:6px;border:1px solid #e2e8f0}'
-    +'.ftr{margin-top:30px;border-top:1px solid #cbd5e1;padding-top:10px;font-size:.75rem;color:#64748b;display:flex;justify-content:space-between}'
-    +'</style></head><body>'
-    +'<div class="hdr"><div><div class="ttl">&#9889; RELAT\u00d3RIO DE PR\u00c9-DIMENSIONAMENTO EL\u00c9TRICO</div>'
-    +'<div class="sub">Em conformidade com a ABNT NBR 5410:2004</div></div>'
-    +'<div style="text-align:right;font-size:.85rem;font-weight:bold;color:#3b82f6">EMISS\u00c3O: '+dataHoje+'</div></div>'
-    +'<div class="st">1. Parecer T\u00e9cnico</div>'
-    +'<div class="'+(parecerAtende?'pb-atende':'pb-reprov')+'">'+parecerHTML+'</div>'
-    +'<div class="st">2. Mem\u00f3ria de C\u00e1lculo Detalhada</div>'
-    +'<pre>'+memoriaGlobal+'</pre>'
-    +'<div class="ftr">'
-    +'<div>Aviso: este documento \u00e9 um pr\u00e9-dimensionamento e n\u00e3o substitui projeto el\u00e9trico elaborado por Engenheiro habilitado.</div>'
-    +'<div>Data: '+dataHoje+'</div></div>'
-    +'<script>window.onload=function(){window.print();}<\/script>'
-    +'</body></html>';
-  win.document.write(h);
-  win.document.close();
+async function gerarPDF(){
+  var btn=document.querySelector('.btn-pdf');
+  if(btn.disabled) return;
+  var btnTextOriginal=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='&#8987; Gerando PDF...';
+
+  try{
+    if(typeof html2pdf==='undefined'){
+      throw new Error('Biblioteca de PDF n\u00e3o carregada. Verifique sua conex\u00e3o.');
+    }
+
+    var dataHoje=new Date().toLocaleDateString('pt-BR');
+    var bgB64=document.getElementById('bgBase64Store').value;
+    var parecerHTML=document.getElementById('parecerTexto').innerHTML;
+    var parecerAtende=document.getElementById('parecerCard').classList.contains('atende');
+
+    // Container off-screen para gerar o PDF
+    var container=document.createElement('div');
+    container.style.position='absolute';
+    container.style.left='-9999px';
+    container.style.top='0';
+    container.style.width='210mm';
+    container.style.backgroundColor='#ffffff';
+    container.style.color='#0f172a';
+    container.style.fontFamily='"Segoe UI", Arial, sans-serif';
+    container.style.lineHeight='1.6';
+    container.style.padding='15mm';
+    container.style.boxSizing='border-box';
+
+    var styleBlock='<style>'
+      +'.pdf-bg{position:absolute;inset:0;background-image:url("data:image/jpeg;base64,'+bgB64+'");background-size:cover;opacity:0.05;z-index:0}'
+      +'.pdf-content{position:relative;z-index:1}'
+      +'.pb-atende{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:#14532d}'
+      +'.pb-reprov{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:#7f1d1d}'
+      +'.parecer-aprovado-destaque{background:#dcfce7;border:2px solid #16a34a;border-radius:10px;padding:14px 18px;margin-top:12px;text-align:center;font-size:1.05rem;font-weight:700;color:#15803d;letter-spacing:.5px}'
+      +'pre{background:#f1f5f9;padding:14px;font-family:Consolas,"Courier New",monospace;font-size:.78rem;white-space:pre-wrap;border-radius:6px;border:1px solid #e2e8f0;color:#0f172a;word-break:break-all}'
+      +'</style>';
+
+    var h=styleBlock
+      +'<div class="pdf-bg"></div>'
+      +'<div class="pdf-content">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #3b82f6;padding-bottom:12px;margin-bottom:20px">'
+      +'<div><div style="font-size:1.4rem;font-weight:bold;color:#1e3a8a">&#9889; RELAT\u00d3RIO DE PR\u00c9-DIMENSIONAMENTO EL\u00c9TRICO</div>'
+      +'<div style="font-size:.85rem;color:#475569">Em conformidade com a ABNT NBR 5410:2004</div></div>'
+      +'<div style="text-align:right;font-size:.85rem;font-weight:bold;color:#3b82f6">EMISS\u00c3O: '+dataHoje+'</div></div>'
+      +'<div style="font-size:1.05rem;font-weight:bold;color:#1e293b;border-bottom:1px solid #cbd5e1;padding-bottom:4px;margin:18px 0 10px">1. Parecer T\u00e9cnico</div>'
+      +'<div class="'+(parecerAtende?'pb-atende':'pb-reprov')+'">'+parecerHTML+'</div>'
+      +'<div style="font-size:1.05rem;font-weight:bold;color:#1e293b;border-bottom:1px solid #cbd5e1;padding-bottom:4px;margin:18px 0 10px">2. Mem\u00f3ria de C\u00e1lculo Detalhada</div>'
+      +'<pre>'+memoriaGlobal+'</pre>'
+      +'<div style="margin-top:30px;border-top:1px solid #cbd5e1;padding-top:10px;font-size:.75rem;color:#64748b;display:flex;justify-content:space-between">'
+      +'<div>Aviso: pr\u00e9-dimensionamento, n\u00e3o substitui projeto de Engenheiro habilitado.</div>'
+      +'<div>Data: '+dataHoje+'</div></div>'
+      +'</div>';
+
+    container.innerHTML=h;
+    document.body.appendChild(container);
+
+    var dataArq=new Date().toISOString().split('T')[0];
+    var nomeArquivo='dimensionamento-eletrico-'+dataArq+'.pdf';
+
+    var opt={
+      margin:       0,
+      filename:     nomeArquivo,
+      image:        { type: 'jpeg', quality: 0.98 },
+      html2canvas:  { scale: 2, useCORS: true },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    var worker=html2pdf().set(opt).from(container);
+    var pdfBlob=await worker.output('blob');
+    var pdfFile=new File([pdfBlob], nomeArquivo, { type: 'application/pdf' });
+    
+    var compartilhou=false;
+    if(navigator.share && navigator.canShare){
+      try{
+        if(navigator.canShare({files:[pdfFile]})){
+          await navigator.share({
+            files: [pdfFile],
+            title: 'Relat\u00f3rio PDF - Dimensionamento El\u00e9trico',
+            text: 'Segue em anexo o relat\u00f3rio de pr\u00e9-dimensionamento el\u00e9trico.'
+          });
+          compartilhou=true;
+        }
+      }catch(err){
+        console.log('Compartilhamento falhou ou foi cancelado:', err);
+      }
+    }
+
+    if(!compartilhou){
+      var url=URL.createObjectURL(pdfBlob);
+      var a=document.createElement('a');
+      a.style.display='none';
+      a.href=url;
+      a.download=nomeArquivo;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function(){
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },100);
+    }
+
+    document.body.removeChild(container);
+    btn.innerHTML='&#9989; PDF GERADO';
+    setTimeout(function(){btn.innerHTML=btnTextOriginal;btn.disabled=false;},3000);
+
+  }catch(error){
+    console.error('Erro ao gerar PDF:',error);
+    btn.innerHTML='&#10060; ERRO AO GERAR';
+    alert('N\u00e3o foi poss\u00edvel gerar o PDF: '+error.message);
+    setTimeout(function(){btn.innerHTML=btnTextOriginal;btn.disabled=false;},3000);
+  }
 }
 
 /* =====================================================================
