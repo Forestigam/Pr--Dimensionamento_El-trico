@@ -368,6 +368,7 @@ footer{
 </style>
 </head>
 <body>
+<input type="hidden" id="bgBase64Store" value="__BG__">
 <div class="container">
 
 <!-- HEADER -->
@@ -1164,16 +1165,15 @@ async function gerarPDF(){
     container.style.boxSizing='border-box';
 
     var styleBlock='<style>'
-      +'.pdf-bg{position:absolute;inset:0;background-image:url("data:image/jpeg;base64,'+bgB64+'");background-size:cover;opacity:0.05;z-index:0}'
       +'.pdf-content{position:relative;z-index:1}'
       +'.pb-atende{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:#14532d}'
       +'.pb-reprov{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:#7f1d1d}'
       +'.parecer-aprovado-destaque{background:#dcfce7;border:2px solid #16a34a;border-radius:10px;padding:14px 18px;margin-top:12px;text-align:center;font-size:1.05rem;font-weight:700;color:#15803d;letter-spacing:.5px}'
-      +'pre{background:#f1f5f9;padding:14px;font-family:Consolas,"Courier New",monospace;font-size:.78rem;white-space:pre-wrap;border-radius:6px;border:1px solid #e2e8f0;color:#0f172a;word-break:break-all}'
+      +'pre{background:#f1f5f9;padding:14px;font-family:Consolas,"Courier New",monospace;font-size:.78rem;white-space:pre-wrap;border-radius:6px;border:1px solid #e2e8f0;color:#0f172a;word-break:break-word}'
       +'</style>';
 
     var h=styleBlock
-      +'<div class="pdf-bg"></div>'
+      +'<img src="data:image/jpeg;base64,'+bgB64+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.05;z-index:0" alt="">'
       +'<div class="pdf-content">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #3b82f6;padding-bottom:12px;margin-bottom:20px">'
       +'<div><div style="font-size:1.4rem;font-weight:bold;color:#1e3a8a">&#9889; RELAT\u00d3RIO DE PR\u00c9-DIMENSIONAMENTO EL\u00c9TRICO</div>'
@@ -1264,7 +1264,6 @@ function limpar(){
 adicionarCarga('Motor Bomba de \u00c1gua','motor','potencia',5,'CV',0.85,90,1);
 </script>
 
-<input type="hidden" id="bgBase64Store" value="__BG__">
 </body>
 </html>"""
 
