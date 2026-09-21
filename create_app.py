@@ -1159,7 +1159,7 @@ async function gerarPDF(){
       +'pre{background:#f1f5f9;padding:14px;font-family:Consolas,"Courier New",monospace;font-size:.78rem;white-space:pre-wrap;border-radius:6px;border:1px solid #e2e8f0;color:#0f172a;word-break:break-word}'
       +'</style>';
 
-    var h = '<div style="position:relative;background-color:#ffffff;color:#0f172a;font-family:\'Segoe UI\',Arial,sans-serif;line-height:1.6;padding:15mm;box-sizing:border-box;">'
+    var h = '<div style="position:relative;background-color:#ffffff;color:#0f172a;font-family:\'Segoe UI\',Arial,sans-serif;line-height:1.6;box-sizing:border-box;">'
       + styleBlock
       + '<img src="data:image/jpeg;base64,'+bgB64+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.05;z-index:0" alt="">'
       + '<div class="pdf-content">'
@@ -1180,11 +1180,12 @@ async function gerarPDF(){
     var nomeArquivo='dimensionamento-eletrico-'+dataArq+'.pdf';
 
     var opt={
-      margin:       0,
+      margin:       15,
       filename:     nomeArquivo,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 1024 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
 
     var worker=html2pdf().set(opt).from(h);
