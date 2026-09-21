@@ -1203,7 +1203,13 @@ async function gerarPDF(){
     var url=URL.createObjectURL(pdfBlob);
 
     if(newTab){
-      newTab.location.href=url;
+      newTab.document.open();
+      newTab.document.write('<html><head><title>'+nomeArquivo+'</title><meta name="viewport" content="width=device-width, initial-scale=1.0">');
+      newTab.document.write('<style>body{margin:0;padding:0;background:#525659;display:flex;flex-direction:column;height:100vh;} .bar{background:#323639;width:100%;padding:12px;text-align:center;box-sizing:border-box;} .btn{background:#3b82f6;color:#fff;text-decoration:none;padding:10px 20px;border-radius:5px;font-family:sans-serif;font-weight:bold;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.2);} iframe{width:100%;height:100%;border:none;flex:1;}</style></head><body>');
+      newTab.document.write('<div class="bar"><a href="'+url+'" download="'+nomeArquivo+'" class="btn">&#11015; BAIXAR PDF</a></div>');
+      newTab.document.write('<iframe src="'+url+'"></iframe>');
+      newTab.document.write('</body></html>');
+      newTab.document.close();
     }else{
       var a=document.createElement('a');
       a.style.display='none';
