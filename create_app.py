@@ -1160,39 +1160,51 @@ async function gerarPDF(){
     var parecerAtende=document.getElementById('parecerCard').classList.contains('atende');
 
     var styleBlock='<style>'
-      +'html, body { width: auto !important; max-width: none !important; overflow: visible !important; }'
-      +'.pdf-content{position:relative;z-index:1}'
-      +'.pb-atende{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:#14532d}'
-      +'.pb-reprov{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:#7f1d1d}'
-      +'.parecer-aprovado-destaque{background:#dcfce7;border:2px solid #16a34a;border-radius:10px;padding:14px 18px;margin-top:12px;text-align:center;font-size:1.05rem;font-weight:700;color:#15803d;letter-spacing:.5px}'
-      +'pre{background:#f1f5f9;padding:14px;font-family:Consolas,"Courier New",monospace;font-size:.78rem;white-space:pre-wrap;border-radius:6px;border:1px solid #e2e8f0;color:#0f172a;word-break:break-word}'
+      +'* { box-sizing: border-box !important; margin: 0; padding: 0; }'
+      +'html, body { width: 794px !important; max-width: 794px !important; min-width: 794px !important; background: #ffffff !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }'
+      +'.pdf-container { width: 794px !important; max-width: 794px !important; min-width: 794px !important; padding: 24px 30px !important; position: relative !important; background-color: #ffffff !important; color: #0f172a !important; font-family: "Segoe UI", Arial, sans-serif !important; line-height: 1.5 !important; box-sizing: border-box !important; }'
+      +'.pdf-content { position: relative !important; z-index: 1 !important; width: 100% !important; max-width: 100% !important; }'
+      +'.pdf-header { display: flex !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #3b82f6 !important; padding-bottom: 10px !important; margin-bottom: 16px !important; }'
+      +'.pdf-title { font-size: 1.25rem !important; font-weight: bold !important; color: #1e3a8a !important; }'
+      +'.pdf-subtitle { font-size: 0.8rem !important; color: #475569 !important; }'
+      +'.pdf-date { text-align: right !important; font-size: 0.8rem !important; font-weight: bold !important; color: #3b82f6 !important; }'
+      +'.pdf-sec-title { font-size: 0.95rem !important; font-weight: bold !important; color: #1e293b !important; border-bottom: 1px solid #cbd5e1 !important; padding-bottom: 4px !important; margin: 14px 0 8px !important; }'
+      +'.pb-atende { background: #f0fdf4 !important; border: 1px solid #86efac !important; border-radius: 8px !important; padding: 12px 14px !important; margin-bottom: 12px !important; font-size: 0.85rem !important; line-height: 1.6 !important; color: #14532d !important; width: 100% !important; box-sizing: border-box !important; word-break: break-word !important; overflow-wrap: break-word !important; }'
+      +'.pb-reprov { background: #fef2f2 !important; border: 1px solid #fca5a5 !important; border-radius: 8px !important; padding: 12px 14px !important; margin-bottom: 12px !important; font-size: 0.85rem !important; line-height: 1.6 !important; color: #7f1d1d !important; width: 100% !important; box-sizing: border-box !important; word-break: break-word !important; overflow-wrap: break-word !important; }'
+      +'.parecer-aprovado-destaque { background: #dcfce7 !important; border: 2px solid #16a34a !important; border-radius: 8px !important; padding: 10px 14px !important; margin-top: 10px !important; text-align: center !important; font-size: 0.95rem !important; font-weight: 700 !important; color: #15803d !important; letter-spacing: 0.5px !important; width: 100% !important; box-sizing: border-box !important; }'
+      +'pre { background: #f8fafc !important; padding: 12px 14px !important; font-family: Consolas, "Courier New", monospace !important; font-size: 0.74rem !important; line-height: 1.45 !important; white-space: pre-wrap !important; border-radius: 6px !important; border: 1px solid #e2e8f0 !important; color: #0f172a !important; word-break: break-word !important; width: 100% !important; box-sizing: border-box !important; }'
+      +'.pdf-footer { margin-top: 20px !important; border-top: 1px solid #cbd5e1 !important; padding-top: 8px !important; font-size: 0.72rem !important; color: #64748b !important; display: flex !important; justify-content: space-between !important; }'
       +'</style>';
 
-    var h = '<div style="width:794px; padding:20px; position:relative; background-color:#ffffff; color:#0f172a; font-family:\'Segoe UI\',Arial,sans-serif; line-height:1.6; box-sizing:border-box;">'
+    var h = '<div class="pdf-container">'
       + styleBlock
-      + '<img src="data:image/jpeg;base64,'+bgB64+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.05;z-index:0" alt="">'
+      + (bgB64 ? '<img src="data:image/jpeg;base64,'+bgB64+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.05;z-index:0" alt="">' : '')
       + '<div class="pdf-content">'
-      + '<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #3b82f6;padding-bottom:12px;margin-bottom:20px">'
-      + '<div><div style="font-size:1.4rem;font-weight:bold;color:#1e3a8a">&#9889; RELAT\u00d3RIO DE PR\u00c9-DIMENSIONAMENTO EL\u00c9TRICO</div>'
-      + '<div style="font-size:.85rem;color:#475569">Em conformidade com a ABNT NBR 5410:2004</div></div>'
-      + '<div style="text-align:right;font-size:.85rem;font-weight:bold;color:#3b82f6">EMISS\u00c3O: '+dataHoje+'</div></div>'
-      + '<div style="font-size:1.05rem;font-weight:bold;color:#1e293b;border-bottom:1px solid #cbd5e1;padding-bottom:4px;margin:18px 0 10px">1. Parecer T\u00e9cnico</div>'
+      + '<div class="pdf-header">'
+      + '<div>'
+      + '<div class="pdf-title">&#9889; RELAT\u00d3RIO DE PR\u00c9-DIMENSIONAMENTO EL\u00c9TRICO</div>'
+      + '<div class="pdf-subtitle">Em conformidade com a ABNT NBR 5410:2004</div>'
+      + '</div>'
+      + '<div class="pdf-date">EMISS\u00c3O: '+dataHoje+'</div>'
+      + '</div>'
+      + '<div class="pdf-sec-title">1. Parecer T\u00e9cnico</div>'
       + '<div class="'+(parecerAtende?'pb-atende':'pb-reprov')+'">'+parecerHTML+'</div>'
-      + '<div style="font-size:1.05rem;font-weight:bold;color:#1e293b;border-bottom:1px solid #cbd5e1;padding-bottom:4px;margin:18px 0 10px">2. Mem\u00f3ria de C\u00e1lculo Detalhada</div>'
+      + '<div class="pdf-sec-title">2. Mem\u00f3ria de C\u00e1lculo Detalhada</div>'
       + '<pre>'+memoriaGlobal.replace(/</g, '&lt;').replace(/>/g, '&gt;')+'</pre>'
-      + '<div style="margin-top:30px;border-top:1px solid #cbd5e1;padding-top:10px;font-size:.75rem;color:#64748b;display:flex;justify-content:space-between">'
+      + '<div class="pdf-footer">'
       + '<div>Aviso: pr\u00e9-dimensionamento, n\u00e3o substitui projeto de Engenheiro habilitado.</div>'
-      + '<div>Data: '+dataHoje+'</div></div>'
+      + '<div>Data: '+dataHoje+'</div>'
+      + '</div>'
       + '</div></div>';
 
     var dataArq=new Date().toISOString().split('T')[0];
     var nomeArquivo='dimensionamento-eletrico-'+dataArq+'.pdf';
 
     var opt={
-      margin:       10,
+      margin:       0,
       filename:     nomeArquivo,
       image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, scrollY: 0, scrollX: 0, windowWidth: 800 },
+      html2canvas:  { scale: 2, useCORS: true, scrollY: 0, scrollX: 0, windowWidth: 794 },
       jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
       pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
     };
@@ -1228,7 +1240,6 @@ async function gerarPDF(){
 
   }catch(error){
     console.error('Erro ao gerar PDF:',error);
-    if(newTab) newTab.close();
     btn.innerHTML='&#10060; ERRO AO GERAR';
     alert('N\u00e3o foi poss\u00edvel gerar o PDF: '+error.message);
     setTimeout(function(){btn.innerHTML=btnTextOriginal;btn.disabled=false;},3000);
