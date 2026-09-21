@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pré-Dimensionamento Elétrico — NBR 5410</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 /* =========================================================
    VARIÁVEIS E RESET
@@ -1138,8 +1138,8 @@ async function gerarPDF(){
   }catch(e){}
 
   try{
-    if(typeof html2pdf==='undefined'){
-      throw new Error('Biblioteca de PDF n\u00e3o carregada. Verifique sua conex\u00e3o.');
+    if(typeof html2canvas==='undefined' || !window.jspdf){
+      throw new Error('Bibliotecas de PDF n\u00e3o carregadas. Verifique sua conex\u00e3o.');
     }
 
     var dataHoje=new Date().toLocaleDateString('pt-BR');
@@ -1149,8 +1149,7 @@ async function gerarPDF(){
 
     var styleBlock='<style>'
       +'* { box-sizing: border-box !important; margin: 0; padding: 0; }'
-      +'html, body { width: 794px !important; max-width: 794px !important; min-width: 794px !important; background: #ffffff !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; }'
-      +'.pdf-container { width: 794px !important; max-width: 794px !important; min-width: 794px !important; padding: 24px 30px !important; position: relative !important; background-color: #ffffff !important; color: #0f172a !important; font-family: "Segoe UI", Arial, sans-serif !important; line-height: 1.5 !important; box-sizing: border-box !important; }'
+      +'.pdf-container { width: 794px !important; min-width: 794px !important; max-width: 794px !important; padding: 24px 30px !important; position: relative !important; background-color: #ffffff !important; color: #0f172a !important; font-family: "Segoe UI", Arial, sans-serif !important; line-height: 1.5 !important; box-sizing: border-box !important; }'
       +'.pdf-content { position: relative !important; z-index: 1 !important; width: 100% !important; max-width: 100% !important; }'
       +'.pdf-header { display: flex !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #3b82f6 !important; padding-bottom: 10px !important; margin-bottom: 16px !important; }'
       +'.pdf-title { font-size: 1.25rem !important; font-weight: bold !important; color: #1e3a8a !important; }'
@@ -1164,8 +1163,10 @@ async function gerarPDF(){
       +'.pdf-footer { margin-top: 20px !important; border-top: 1px solid #cbd5e1 !important; padding-top: 8px !important; font-size: 0.72rem !important; color: #64748b !important; display: flex !important; justify-content: space-between !important; }'
       +'</style>';
 
-    var h = '<div class="pdf-container">'
-      + styleBlock
+    var container = document.createElement('div');
+    container.className = 'pdf-container';
+    container.style.cssText = 'position:fixed; left:0; top:0; width:794px; min-width:794px; max-width:794px; z-index:999999; background:#ffffff; box-sizing:border-box;';
+    container.innerHTML = styleBlock
       + (bgB64 ? '<img src="data:image/jpeg;base64,'+bgB64+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.05;z-index:0" alt="">' : '')
       + '<div class="pdf-content">'
       + '<div class="pdf-header">'
@@ -1183,24 +1184,44 @@ async function gerarPDF(){
       + '<div>Aviso: pr\u00e9-dimensionamento, n\u00e3o substitui projeto de Engenheiro habilitado.</div>'
       + '<div>Data: '+dataHoje+'</div>'
       + '</div>'
-      + '</div></div>';
+      + '</div>';
 
-    var dataArq=new Date().toISOString().split('T')[0];
-    var nomeArquivo='dimensionamento-eletrico-'+dataArq+'.pdf';
+    document.body.appendChild(container);
 
-    var opt={
-      margin:       0,
-      filename:     nomeArquivo,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, scrollY: 0, scrollX: 0, windowWidth: 794 },
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-    };
+    var canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      scrollY: 0,
+      scrollX: 0,
+      width: 794,
+      windowWidth: 794
+    });
 
-    var worker=html2pdf().set(opt).from(h);
-    var pdfBlob=await worker.output('blob');
+    document.body.removeChild(container);
 
-    var url=URL.createObjectURL(pdfBlob);
+    var imgData = canvas.toDataURL('image/jpeg', 0.98);
+    var jsPDFClass = window.jspdf ? window.jspdf.jsPDF : window.jsPDF;
+    var doc = new jsPDFClass({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    
+    var pdfWidth = 210;
+    var pageHeight = 297;
+    var imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    var heightLeft = imgHeight;
+    var position = 0;
+
+    doc.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      doc.addPage();
+      doc.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    var pdfBlob = doc.output('blob');
+    var nomeArquivo = 'dimensionamento-eletrico-' + new Date().toISOString().split('T')[0] + '.pdf';
+    var url = URL.createObjectURL(pdfBlob);
 
     if(newTab){
       newTab.document.open();
@@ -1228,6 +1249,7 @@ async function gerarPDF(){
 
   }catch(error){
     console.error('Erro ao gerar PDF:',error);
+    if(newTab) newTab.close();
     btn.innerHTML='&#10060; ERRO AO GERAR';
     alert('N\u00e3o foi poss\u00edvel gerar o PDF: '+error.message);
     setTimeout(function(){btn.innerHTML=btnTextOriginal;btn.disabled=false;},3000);
