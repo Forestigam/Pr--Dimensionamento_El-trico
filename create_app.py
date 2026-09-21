@@ -1143,6 +1143,9 @@ async function gerarPDF(){
 
   // Abre nova aba de forma sincrona para evitar bloqueio de popup
   var newTab=null;
+  var vp = document.querySelector('meta[name="viewport"]');
+  var vpOriginal = vp ? vp.content : '';
+
   try{
     newTab=window.open('','_blank');
     if(newTab){
@@ -1154,6 +1157,8 @@ async function gerarPDF(){
     if(typeof html2pdf==='undefined'){
       throw new Error('Biblioteca de PDF n\u00e3o carregada. Verifique sua conex\u00e3o.');
     }
+
+    if(vp) vp.content = 'width=800';
 
     var dataHoje=new Date().toLocaleDateString('pt-BR');
     var bgB64=document.getElementById('bgBase64Store').value;
@@ -1199,6 +1204,9 @@ async function gerarPDF(){
 
     var worker=html2pdf().set(opt).from(h);
     var pdfBlob=await worker.output('blob');
+    
+    // Restaura o viewport original imediatamente
+    if(vp) vp.content = vpOriginal;
 
     var url=URL.createObjectURL(pdfBlob);
 
@@ -1227,6 +1235,7 @@ async function gerarPDF(){
     setTimeout(function(){btn.innerHTML=btnTextOriginal;btn.disabled=false;},3000);
 
   }catch(error){
+    if(vp) vp.content = vpOriginal;
     console.error('Erro ao gerar PDF:',error);
     if(newTab) newTab.close();
     btn.innerHTML='&#10060; ERRO AO GERAR';
