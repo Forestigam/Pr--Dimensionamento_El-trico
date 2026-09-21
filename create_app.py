@@ -1141,11 +1141,7 @@ async function gerarPDF(){
   btn.disabled=true;
   btn.innerHTML='&#8987; Gerando PDF...';
 
-  // Abre nova aba de forma sincrona para evitar bloqueio de popup
   var newTab=null;
-  var vp = document.querySelector('meta[name="viewport"]');
-  var vpOriginal = vp ? vp.content : '';
-
   try{
     newTab=window.open('','_blank');
     if(newTab){
@@ -1158,14 +1154,13 @@ async function gerarPDF(){
       throw new Error('Biblioteca de PDF n\u00e3o carregada. Verifique sua conex\u00e3o.');
     }
 
-    if(vp) vp.content = 'width=800';
-
     var dataHoje=new Date().toLocaleDateString('pt-BR');
     var bgB64=document.getElementById('bgBase64Store').value;
     var parecerHTML=document.getElementById('parecerTexto').innerHTML;
     var parecerAtende=document.getElementById('parecerCard').classList.contains('atende');
 
     var styleBlock='<style>'
+      +'html, body { width: auto !important; max-width: none !important; overflow: visible !important; }'
       +'.pdf-content{position:relative;z-index:1}'
       +'.pb-atende{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:#14532d}'
       +'.pb-reprov{background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:16px 18px;margin-bottom:16px;font-size:.9rem;line-height:1.7;color:#7f1d1d}'
@@ -1204,9 +1199,6 @@ async function gerarPDF(){
 
     var worker=html2pdf().set(opt).from(h);
     var pdfBlob=await worker.output('blob');
-    
-    // Restaura o viewport original imediatamente
-    if(vp) vp.content = vpOriginal;
 
     var url=URL.createObjectURL(pdfBlob);
 
@@ -1235,7 +1227,6 @@ async function gerarPDF(){
     setTimeout(function(){btn.innerHTML=btnTextOriginal;btn.disabled=false;},3000);
 
   }catch(error){
-    if(vp) vp.content = vpOriginal;
     console.error('Erro ao gerar PDF:',error);
     if(newTab) newTab.close();
     btn.innerHTML='&#10060; ERRO AO GERAR';
