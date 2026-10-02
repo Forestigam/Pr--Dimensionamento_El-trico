@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste PDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { background: #eee; font-family: sans-serif; }
+        .btn { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Página de Teste PDF</h1>
+    <button class="btn btn-pdf" onclick="gerarPDF()">Gerar PDF</button>
+
+    <!-- Simulando dados da página -->
+    <input type="hidden" id="bgBase64Store" value="">
+    <div id="parecerTexto" style="display:none;">O cabo atende aos requisitos.</div>
+    <div id="parecerCard" class="atende" style="display:none;"></div>
+
+    <script>
+        var memoriaGlobal = "1. TESTE\n--------------------\nValor = 10 < 20 (OK)\n\n2. TESTE 2\nOutro texto longo para testar a quebra de linha. ".repeat(20);
+        
+        async function gerarPDF() {
+            var btn = document.querySelector('.btn-pdf');
+            btn.innerHTML = 'Gerando...';
+
+            var bgB64 = "";
+            var parecerHTML = document.getElementById('parecerTexto').innerHTML;
+            
+            var styleBlock = '<style>'
+                + '.pdf-content{position:relative;z-index:1}'
+                + 'pre{background:#f1f5f9;padding:14px;font-family:Consolas,monospace;font-size:12px;white-space:pre-wrap;border:1px solid #e2e8f0;word-break:break-word}'
+                + '</style>';
+
+            // Montamos o wrapper explicitamente com 794px (largura A4 a 96dpi)
+            var h = '<div id="pdf-container" style="width:794px; padding:20px; background-color:#ffffff; color:#0f172a; font-family:Arial,sans-serif; box-sizing:border-box;">'
+                + styleBlock
+                + '<div class="pdf-content">'
+                + '<h2>RELATÓRIO TESTE</h2>'
+                + '<div>Parecer: ' + parecerHTML + '</div>'
+                + '<pre>' + memoriaGlobal.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>'
+                + '</div></div>';
+
+            // Adiciona ao DOM para o html2canvas ter um contexto real
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = h;
+            var container = tempDiv.firstChild;
+            
+            // Esconde o container atrás do body mas deixa ele "renderizável"
+            container.style.position = 'absolute';
+            container.style.top = '0';
+            container.style.left = '0';
+            container.style.zIndex = '-9999';
+            document.body.appendChild(container);
+
+            var opt = {
+                margin:       10, // mm
+                filename:     'teste.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, scrollY: 0, windowWidth: 794 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
+            };
+
+            var worker = html2pdf().set(opt).from(container);
+            var pdfBlob = await worker.output('blob');
+            
+            // Nova aba
+            var url = URL.createObjectURL(pdfBlob);
+            window.open(url, '_blank');
+
+            // Cleanup
+            document.body.removeChild(container);
+            btn.innerHTML = 'Gerar PDF';
+        }
+    </script>
+</body>
+</html>

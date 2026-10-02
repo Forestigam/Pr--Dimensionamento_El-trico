@@ -1,0 +1,195 @@
+// Test full direct html2canvas + jsPDF engine
+const fs = require('fs');
+
+const testHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Teste Motor Direto jsPDF</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: sans-serif; background: #333; padding: 20px; color: #fff; }
+  button { padding: 12px 24px; font-size: 16px; cursor: pointer; background: #3b82f6; color: #fff; border: none; border-radius: 6px; }
+</style>
+</head>
+<body>
+<h1>Teste do Novo Motor jsPDF + html2canvas Direto</h1>
+<p style="margin: 15px 0;">Clique no botão abaixo para testar a renderização com dimensionamento exato A4.</p>
+<button onclick="gerarPDF()">Gerar PDF Perfeito</button>
+
+<input type="hidden" id="bgBase64Store" value="">
+<div id="parecerTexto" style="display:none;">
+  ✅ <strong>PARECER TÉCNICO:</strong> O cabo selecionado de <strong>4 mm²</strong> atende os requisitos de queda de tensão e condução de corrente elétrica exigidos pela NBR 5410. A capacidade de condução corrigida é de <strong>32.00 A</strong>, superior à corrente de projeto de <strong>19.67 A</strong>. A queda de tensão calculada é de <strong>6.19 V (2.82%)</strong>, dentro do limite máximo de 4,00%. Você pode executar o projeto com segurança!
+  <div class="parecer-aprovado-destaque">🟢 PARABÉNS! SEU PROJETO ESTÁ APROVADO!</div>
+</div>
+<div id="parecerCard" class="atende" style="display:none;"></div>
+
+<script>
+var memoriaGlobal = \`======================================================================
+      MEMÓRIA DE CÁLCULO — PRÉ-DIMENSIONAMENTO ELÉTRICO
+                    ABNT NBR 5410:2004
+======================================================================
+
+1. CÁLCULO DA CORRENTE DE PROJETO (Ib)
+----------------------------------------------------------------------
+  Potência Ativa Total  P = 3.670 kW
+  Potência Reativa Total Q = 2.274 kVAR
+  Potência Aparente Total S = 4.318 kVA
+  Fator de Potência Equivalente FPeq = 0.8500
+  Sistema: Monofásico — 220 V
+
+  Fórmula: Ib = S / (2 x V)
+  Ib = 4318.00 / (2 x 220) => Ib = 19.67 A
+
+2. CAPACIDADE DE CONDUÇÃO CORRIGIDA (Iz)
+----------------------------------------------------------------------
+  Material : COBRE   Isolação : PVC
+  Método NBR 5410 : B1 (2 condutores carregados)
+  Seção avaliada : 4 mm²
+  Iz base (30°C) : 32.00 A
+  Fator de temperatura (30°C) : 1.00
+  Fator de agrupamento (1 circ.) : 1.00
+
+  Fórmula: Iz = Iz_base x Ftemp x Fagrup
+  Iz = 32.00 x 1.00 x 1.00 => Iz = 32.00 A
+
+3. QUEDA DE TENSÃO (ΔV)
+----------------------------------------------------------------------
+  Comprimento L = 30 m
+  Resistividade ρ (Cobre) = 0,021 Ω.mm²/m
+
+  Fórmula: ΔV = (coef x L x Ib x ρ) / S
+  ΔV = (2 x 30 x 19.67 x 0,021) / 4
+  ΔV = 6.19 V => ΔV% = 2.82%
+
+4. VERIFICAÇÃO FINAL — CRITÉRIOS NBR 5410
+----------------------------------------------------------------------
+  [Crit. 1] Iz (32.00 A) >= Ib (19.67 A): APROVADO
+  [Crit. 2] ΔV% (2.82%) <= 4,00%: APROVADO
+
+  RESULTADO GERAL: ATENDE À NBR 5410
+======================================================================\`;
+
+async function gerarPDF() {
+  const btn = document.querySelector('button');
+  btn.innerHTML = 'Gerando...';
+
+  const newTab = window.open('', '_blank');
+  if (newTab) {
+    newTab.document.write('<div style="font-family:sans-serif;padding:20px;text-align:center">Gerando PDF, aguarde...</div>');
+  }
+
+  try {
+    const dataHoje = new Date().toLocaleDateString('pt-BR');
+    const parecerHTML = document.getElementById('parecerTexto').innerHTML;
+    const parecerAtende = document.getElementById('parecerCard').classList.contains('atende');
+
+    const styleBlock = \`<style>
+      * { box-sizing: border-box !important; margin: 0; padding: 0; }
+      .pdf-container {
+        width: 794px !important;
+        min-width: 794px !important;
+        max-width: 794px !important;
+        padding: 24px 30px !important;
+        position: relative !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        font-family: 'Segoe UI', Arial, sans-serif !important;
+        line-height: 1.5 !important;
+        box-sizing: border-box !important;
+      }
+      .pdf-content { position: relative !important; z-index: 1 !important; width: 100% !important; max-width: 100% !important; }
+      .pdf-header { display: flex !important; justify-content: space-between !important; align-items: center !important; border-bottom: 2px solid #3b82f6 !important; padding-bottom: 10px !important; margin-bottom: 16px !important; }
+      .pdf-title { font-size: 1.25rem !important; font-weight: bold !important; color: #1e3a8a !important; }
+      .pdf-subtitle { font-size: 0.8rem !important; color: #475569 !important; }
+      .pdf-date { text-align: right !important; font-size: 0.8rem !important; font-weight: bold !important; color: #3b82f6 !important; }
+      .pdf-sec-title { font-size: 0.95rem !important; font-weight: bold !important; color: #1e293b !important; border-bottom: 1px solid #cbd5e1 !important; padding-bottom: 4px !important; margin: 14px 0 8px !important; }
+      .pb-atende { background: #f0fdf4 !important; border: 1px solid #86efac !important; border-radius: 8px !important; padding: 12px 14px !important; margin-bottom: 12px !important; font-size: 0.85rem !important; line-height: 1.6 !important; color: #14532d !important; width: 100% !important; box-sizing: border-box !important; word-break: break-word !important; overflow-wrap: break-word !important; }
+      .pb-reprov { background: #fef2f2 !important; border: 1px solid #fca5a5 !important; border-radius: 8px !important; padding: 12px 14px !important; margin-bottom: 12px !important; font-size: 0.85rem !important; line-height: 1.6 !important; color: #7f1d1d !important; width: 100% !important; box-sizing: border-box !important; word-break: break-word !important; overflow-wrap: break-word !important; }
+      .parecer-aprovado-destaque { background: #dcfce7 !important; border: 2px solid #16a34a !important; border-radius: 8px !important; padding: 10px 14px !important; margin-top: 10px !important; text-align: center !important; font-size: 0.95rem !important; font-weight: 700 !important; color: #15803d !important; letter-spacing: 0.5px !important; width: 100% !important; box-sizing: border-box !important; }
+      pre { background: #f8fafc !important; padding: 12px 14px !important; font-family: Consolas, 'Courier New', monospace !important; font-size: 0.74rem !important; line-height: 1.45 !important; white-space: pre-wrap !important; border-radius: 6px !important; border: 1px solid #e2e8f0 !important; color: #0f172a !important; word-break: break-word !important; width: 100% !important; box-sizing: border-box !important; }
+      .pdf-footer { margin-top: 20px !important; border-top: 1px solid #cbd5e1 !important; padding-top: 8px !important; font-size: 0.72rem !important; color: #64748b !important; display: flex !important; justify-content: space-between !important; }
+    </style>\`;
+
+    const container = document.createElement('div');
+    container.className = 'pdf-container';
+    container.style.cssText = 'position:fixed; left:0; top:0; width:794px; min-width:794px; max-width:794px; z-index:999999; background:#ffffff; box-sizing:border-box;';
+    container.innerHTML = styleBlock
+      + '<div class="pdf-content">'
+      + '<div class="pdf-header">'
+      + '<div><div class="pdf-title">⚡ RELATÓRIO DE PRÉ-DIMENSIONAMENTO ELÉTRICO</div><div class="pdf-subtitle">Em conformidade com a ABNT NBR 5410:2004</div></div>'
+      + '<div class="pdf-date">EMISSÃO: ' + dataHoje + '</div>'
+      + '</div>'
+      + '<div class="pdf-sec-title">1. Parecer Técnico</div>'
+      + '<div class="' + (parecerAtende ? 'pb-atende' : 'pb-reprov') + '">' + parecerHTML + '</div>'
+      + '<div class="pdf-sec-title">2. Memória de Cálculo Detalhada</div>'
+      + '<pre>' + memoriaGlobal.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>'
+      + '<div class="pdf-footer">'
+      + '<div>Aviso: pré-dimensionamento, não substitui projeto de Engenheiro habilitado.</div>'
+      + '<div>Data: ' + dataHoje + '</div>'
+      + '</div></div>';
+
+    document.body.appendChild(container);
+
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      scrollY: 0,
+      scrollX: 0,
+      width: 794,
+      windowWidth: 794
+    });
+
+    document.body.removeChild(container);
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    
+    const pdfWidth = 210;
+    const pageHeight = 297;
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    doc.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      doc.addPage();
+      doc.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    const pdfBlob = doc.output('blob');
+    const nomeArquivo = 'dimensionamento-eletrico-' + new Date().toISOString().split('T')[0] + '.pdf';
+    const url = URL.createObjectURL(pdfBlob);
+
+    if (newTab) {
+      newTab.document.open();
+      newTab.document.write('<html><head><title>' + nomeArquivo + '</title><meta name="viewport" content="width=device-width, initial-scale=1.0">');
+      newTab.document.write('<style>body{margin:0;padding:0;background:#525659;display:flex;flex-direction:column;height:100vh;} .bar{background:#323639;width:100%;padding:12px;text-align:center;box-sizing:border-box;} .btn{background:#3b82f6;color:#fff;text-decoration:none;padding:10px 20px;border-radius:5px;font-family:sans-serif;font-weight:bold;display:inline-block;box-shadow:0 2px 4px rgba(0,0,0,0.2);} iframe{width:100%;height:100%;border:none;flex:1;}</style></head><body>');
+      newTab.document.write('<div class="bar"><a href="' + url + '" download="' + nomeArquivo + '" class="btn">&#11015; BAIXAR PDF</a></div>');
+      newTab.document.write('<iframe src="' + url + '"></iframe>');
+      newTab.document.write('</body></html>');
+      newTab.document.close();
+    }
+
+    btn.innerHTML = 'PDF Gerado com Sucesso!';
+    setTimeout(() => { btn.innerHTML = 'Gerar PDF Perfeito'; }, 3000);
+  } catch (err) {
+    console.error(err);
+    if (newTab) newTab.close();
+    alert('Erro ao gerar PDF: ' + err.message);
+    btn.innerHTML = 'Erro!';
+  }
+}
+</script>
+</body>
+</html>`;
+
+fs.writeFileSync('teste_motor_direto.html', testHtml, 'utf-8');
+console.log('Teste motor direto criado com sucesso!');

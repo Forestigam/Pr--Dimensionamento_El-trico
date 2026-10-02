@@ -1,0 +1,88 @@
+function renderizarCardsCargas() {
+  const container = document.getElementById('loadCardsContainer');
+  if (!container) return;
+  container.innerHTML = "";
+
+  cargas.forEach((carga, index) => {
+    const card = document.createElement('div');
+    card.className = 'load-card';
+    card.innerHTML = `
+      <div class="load-card-header">
+        <span class="load-card-title">⚡ Item #${index + 1} — ${carga.nome}</span>
+        ${cargas.length > 1 ? `<button type="button" class="btn-remove-load" onclick="removerCarga('${carga.id}')">🗑️ Remover</button>` : ''}
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="grid-column: span 2;">
+          <label>Identificação / Nome da Carga</label>
+          <input type="text" value="${carga.nome}" placeholder="Ex: Motor Bomba, Compressor, Iluminação" onchange="atualizarCarga('${carga.id}', 'nome', this.value);">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Tipo de Carga</label>
+          <select onchange="atualizarCarga('${carga.id}', 'tipoCarga', this.value);">
+            <option value="motor" ${carga.tipoCarga === 'motor' ? 'selected' : ''}>Motor Elétrico</option>
+            <option value="resistiva" ${carga.tipoCarga === 'resistiva' ? 'selected' : ''}>Carga Resistiva (Chuveiro, Aquecedor, Lâmpada Incand.)</option>
+            <option value="nao_identificado" ${carga.tipoCarga === 'nao_identificado' ? 'selected' : ''}>Carga Geral / Não Identificado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Modo de Especificação</label>
+          <select onchange="atualizarCarga('${carga.id}', 'modo', this.value);">
+            <option value="potencia" ${carga.modo === 'potencia' ? 'selected' : ''}>Usar Potência</option>
+            <option value="corrente" ${carga.modo === 'corrente' ? 'selected' : ''}>Usar Corrente Nominal (A)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        ${carga.modo === 'potencia' ? `
+          <div class="form-group">
+            <label>Potência Nominal</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="number" value="${carga.valorPot}" min="0.1" step="0.1" style="flex: 1;" onchange="atualizarCarga('${carga.id}', 'valorPot', parseFloat(this.value));">
+              <select style="width: 85px;" onchange="atualizarCarga('${carga.id}', 'unidadePot', this.value);">
+                <option value="W" ${carga.unidadePot === 'W' ? 'selected' : ''}>W</option>
+                <option value="kW" ${carga.unidadePot === 'kW' ? 'selected' : ''}>kW</option>
+                ${carga.tipoCarga === 'motor' ? `
+                  <option value="CV" ${carga.unidadePot === 'CV' ? 'selected' : ''}>CV</option>
+                  <option value="HP" ${carga.unidadePot === 'HP' ? 'selected' : ''}>HP</option>
+                ` : ''}
+              </select>
+            </div>
+          </div>
+        ` : `
+          <div class="form-group">
+            <label>Corrente Nominal (A)</label>
+            <input type="number" value="${carga.correnteNom}" min="0.1" step="0.1" onchange="atualizarCarga('${carga.id}', 'correnteNom', parseFloat(this.value));">
+          </div>
+        `}
+        <div class="form-group">
+          <label>Quantidade (Qtd)</label>
+          <input type="number" value="${carga.qtd}" min="1" step="1" onchange="atualizarCarga('${carga.id}', 'qtd', parseInt(this.value));">
+        </div>
+      </div>
+      ${carga.tipoCarga === 'motor' ? `
+        <div class="form-row" style="margin-top: 8px;">
+          <div class="form-group" style="grid-column: span 2;">
+            <label for="fpNum_${carga.id}">Fator de Potência da Carga (cos φ)</label>
+            <div class="range-container">
+              <input type="range" id="fpRange_${carga.id}" min="0.15" max="1.00" step="0.01" value="${carga.fp}" oninput="syncCargaFP('${carga.id}', this.value);">
+              <input type="number" id="fpNum_${carga.id}" min="0.15" max="1.00" step="0.01" value="${carga.fp.toFixed(2)}" style="width: 75px;" oninput="syncCargaFP('${carga.id}', this.value);">
+            </div>
+          </div>
+          ${carga.modo === 'potencia' ? `
+            <div class="form-group" style="grid-column: span 2;">
+              <label for="rendNum_${carga.id}">Rendimento do Motor η (%)</label>
+              <div class="range-container">
+                <input type="range" id="rendRange_${carga.id}" min="10" max="100" step="1" value="${carga.rend}" oninput="syncCargaRend('${carga.id}', this.value);">
+                <input type="number" id="rendNum_${carga.id}" min="10" max="100" step="1" value="${Math.round(carga.rend)}" style="width: 75px;" oninput="syncCargaRend('${carga.id}', this.value);">
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
+    `;
+    container.appendChild(card);
+  });
+}
+

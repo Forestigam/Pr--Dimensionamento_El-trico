@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box !important; margin: 0; padding: 0; }
+  html, body {
+    width: 794px !important;
+    max-width: 794px !important;
+    min-width: 794px !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .pdf-container {
+    width: 794px !important;
+    max-width: 794px !important;
+    min-width: 794px !important;
+    padding: 24px 30px !important;
+    position: relative !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-family: 'Segoe UI', Arial, sans-serif !important;
+    line-height: 1.5 !important;
+    box-sizing: border-box !important;
+  }
+  .pdf-content {
+    position: relative !important;
+    z-index: 1 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  .pdf-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-bottom: 2px solid #3b82f6 !important;
+    padding-bottom: 10px !important;
+    margin-bottom: 16px !important;
+  }
+  .pdf-title {
+    font-size: 1.25rem !important;
+    font-weight: bold !important;
+    color: #1e3a8a !important;
+  }
+  .pdf-subtitle {
+    font-size: 0.8rem !important;
+    color: #475569 !important;
+  }
+  .pdf-date {
+    text-align: right !important;
+    font-size: 0.8rem !important;
+    font-weight: bold !important;
+    color: #3b82f6 !important;
+  }
+  .pdf-sec-title {
+    font-size: 0.95rem !important;
+    font-weight: bold !important;
+    color: #1e293b !important;
+    border-bottom: 1px solid #cbd5e1 !important;
+    padding-bottom: 4px !important;
+    margin: 14px 0 8px !important;
+  }
+  .pb-atende {
+    background: #f0fdf4 !important;
+    border: 1px solid #86efac !important;
+    border-radius: 8px !important;
+    padding: 12px 14px !important;
+    margin-bottom: 12px !important;
+    font-size: 0.85rem !important;
+    line-height: 1.6 !important;
+    color: #14532d !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+  .pb-reprov {
+    background: #fef2f2 !important;
+    border: 1px solid #fca5a5 !important;
+    border-radius: 8px !important;
+    padding: 12px 14px !important;
+    margin-bottom: 12px !important;
+    font-size: 0.85rem !important;
+    line-height: 1.6 !important;
+    color: #7f1d1d !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+  }
+  .parecer-aprovado-destaque {
+    background: #dcfce7 !important;
+    border: 2px solid #16a34a !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    margin-top: 10px !important;
+    text-align: center !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    color: #15803d !important;
+    letter-spacing: 0.5px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  pre {
+    background: #f8fafc !important;
+    padding: 12px 14px !important;
+    font-family: Consolas, 'Courier New', monospace !important;
+    font-size: 0.74rem !important;
+    line-height: 1.45 !important;
+    white-space: pre-wrap !important;
+    border-radius: 6px !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #0f172a !important;
+    word-break: break-word !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .pdf-footer {
+    margin-top: 20px !important;
+    border-top: 1px solid #cbd5e1 !important;
+    padding-top: 8px !important;
+    font-size: 0.72rem !important;
+    color: #64748b !important;
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+</style>
+</head>
+<body>
+<div class="pdf-container">
+  <div class="pdf-content">
+    <div class="pdf-header">
+      <div>
+        <div class="pdf-title">⚡ RELATÓRIO DE PRÉ-DIMENSIONAMENTO ELÉTRICO</div>
+        <div class="pdf-subtitle">Em conformidade com a ABNT NBR 5410:2004</div>
+      </div>
+      <div class="pdf-date">EMISSÃO: 21/09/2026</div>
+    </div>
+    <div class="pdf-sec-title">1. Parecer Técnico</div>
+    <div class="pb-atende">✅ <strong>PARECER TÉCNICO:</strong> O cabo selecionado de <strong>4 mm²</strong> atende os requisitos de queda de tensão e condução de corrente elétrica exigidos pela NBR 5410. A capacidade de condução corrigida é de <strong>32.00 A</strong>, superior à corrente de projeto de <strong>19.67 A</strong>. A queda de tensão calculada é de <strong>6.19 V (2.82%)</strong>, dentro do limite máximo de 4,00%. Você pode executar o projeto com segurança!<div class="parecer-aprovado-destaque">🟢 PARABÉNS! SEU PROJETO ESTÁ APROVADO!</div></div>
+    <div class="pdf-sec-title">2. Memória de Cálculo Detalhada</div>
+    <pre>======================================================================
+      MEMÓRIA DE CÁLCULO — PRÉ-DIMENSIONAMENTO ELÉTRICO
+                    ABNT NBR 5410:2004
+======================================================================
+
+1. CÁLCULO DA CORRENTE DE PROJETO (Ib)
+----------------------------------------------------------------------
+  Potência Ativa Total  P = 3.670 kW
+  Potência Reativa Total Q = 2.274 kVAR
+  Potência Aparente Total S = 4.318 kVA
+  Fator de Potência Equivalente FPeq = 0.8500
+  Sistema: Monofásico — 220 V
+
+  Fórmula: Ib = S / (2 x V)
+  Ib = 4318.00 / (2 x 220) =&gt; Ib = 19.67 A
+
+2. CAPACIDADE DE CONDUÇÃO CORRIGIDA (Iz)
+----------------------------------------------------------------------
+  Material : COBRE   Isolação : PVC
+  Método NBR 5410 : B1 (2 condutores carregados)
+  Seção avaliada : 4 mm²
+  Iz base (30°C) : 32.00 A
+  Fator de temperatura (30°C) : 1.00
+  Fator de agrupamento (1 circ.) : 1.00
+
+  Fórmula: Iz = Iz_base x Ftemp x Fagrup
+  Iz = 32.00 x 1.00 x 1.00 =&gt; Iz = 32.00 A
+
+3. QUEDA DE TENSÃO (ΔV)
+----------------------------------------------------------------------
+  Comprimento L = 30 m
+  Resistividade ρ (Cobre) = 0,021 Ω.mm²/m
+
+  Fórmula: ΔV = (coef x L x Ib x ρ) / S
+  ΔV = (2 x 30 x 19.67 x 0,021) / 4
+  ΔV = 6.19 V =&gt; ΔV% = 2.82%
+
+4. VERIFICAÇÃO FINAL — CRITÉRIOS NBR 5410
+----------------------------------------------------------------------
+  [Crit. 1] Iz (32.00 A) &gt;= Ib (19.67 A): APROVADO
+  [Crit. 2] ΔV% (2.82%) &lt;= 4,00%: APROVADO
+
+  RESULTADO GERAL: ATENDE À NBR 5410
+======================================================================</pre>
+    <div class="pdf-footer">
+      <div>Aviso: pré-dimensionamento, não substitui projeto de Engenheiro habilitado.</div>
+      <div>Data: 21/09/2026</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

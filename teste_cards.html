@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Teste</title>
+<style>
+body { background: #0f172a; color: white; font-family: sans-serif; padding: 20px; }
+.load-card { background: rgba(30,41,59,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+.load-card-header { display: flex; justify-content: space-between; margin-bottom: 14px; }
+.load-card-title { color: #06b6d4; font-weight: 600; }
+.form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+label { font-size: 0.85rem; color: #94a3b8; }
+input, select { background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: white; padding: 10px; }
+.form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 12px; }
+.range-container { display: flex; align-items: center; gap: 10px; }
+.range-container input[type=range] { flex: 1; }
+button { background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; }
+#status { padding: 12px; background: rgba(16,185,129,0.2); border-radius: 8px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<div id="status">Inicializando...</div>
+<div id="loadCardsContainer"></div>
+<button onclick="adicionarCarga()">+ Nova Carga</button>
+
+<script>
+var cargas = [];
+var contadorIdCargas = 1;
+
+function adicionarCarga(nome, tipoCarga, modo, valorPot, unidadePot, fp, rend, qtd) {
+  var id = 'carga_' + (contadorIdCargas++);
+  var nomeCarga = nome || ('Carga #' + (cargas.length + 1));
+  cargas.push({
+    id: id, nome: nomeCarga,
+    tipoCarga: tipoCarga || 'motor',
+    modo: modo || 'potencia',
+    valorPot: valorPot || 5,
+    unidadePot: unidadePot || 'HP',
+    correnteNom: 10,
+    fp: fp || 0.85,
+    rend: rend || 80,
+    qtd: qtd || 1
+  });
+  document.getElementById('status').textContent = 'Cargas: ' + cargas.length + ' | Renderizando...';
+  renderizarCardsCargas();
+  document.getElementById('status').textContent = 'OK! Cargas: ' + cargas.length;
+}
+
+function removerCarga(id) {
+  cargas = cargas.filter(function(c) { return c.id !== id; });
+  renderizarCardsCargas();
+}
+
+function atualizarCarga(id, campo, valor) {
+  var c = cargas.find(function(item) { return item.id === id; });
+  if (c) {
+    c[campo] = valor;
+    if (campo === 'tipoCarga' || campo === 'modo') renderizarCardsCargas();
+  }
+}
+
+function syncCargaFP(id, source, val) {
+  var num = Math.max(0.15, Math.min(1.00, parseFloat(val) || 0.85));
+  var c = cargas.find(function(item) { return item.id === id; });
+  if (c) {
+    c.fp = num;
+    if (source === 'range') {
+      var el = document.getElementById('fpNum_' + id);
+      if (el) el.value = num.toFixed(2);
+    } else {
+      var el = document.getElementById('fpRange_' + id);
+      if (el) el.value = num;
+    }
+  }
+}
+
+function syncCargaRend(id, source, val) {
+  var num = Math.max(10, Math.min(100, parseFloat(val) || 80));
+  var c = cargas.find(function(item) { return item.id === id; });
+  if (c) {
+    c.rend = num;
+    if (source === 'range') {
+      var el = document.getElementById('rendNum_' + id);
+      if (el) el.value = Math.round(num);
+    } else {
+      var el = document.getElementById('rendRange_' + id);
+      if (el) el.value = num;
+    }
+  }
+}
+
+function renderizarCardsCargas() {
+  var container = document.getElementById('loadCardsContainer');
+  if (!container) { console.error('loadCardsContainer nao encontrado!'); return; }
+  container.innerHTML = '';
+
+  cargas.forEach(function(carga, index) {
+    var fpVal = (typeof carga.fp === 'number' && !isNaN(carga.fp)) ? carga.fp : 0.85;
+    var rendVal = (typeof carga.rend === 'number' && !isNaN(carga.rend)) ? carga.rend : 80;
+    var potVal = (typeof carga.valorPot === 'number' && !isNaN(carga.valorPot)) ? carga.valorPot : 5;
+    var iNomVal = (typeof carga.correnteNom === 'number' && !isNaN(carga.correnteNom)) ? carga.correnteNom : 10;
+    var qtdVal = (typeof carga.qtd === 'number' && !isNaN(carga.qtd)) ? carga.qtd : 1;
+    var tipoCargaVal = carga.tipoCarga || 'motor';
+    var modoVal = carga.modo || 'potencia';
+    var unidadePotVal = carga.unidadePot || 'HP';
+    var nomeVal = carga.nome || ('Carga #' + (index + 1));
+    var cargaId = carga.id;
+
+    var card = document.createElement('div');
+    card.className = 'load-card';
+
+    var header = document.createElement('div');
+    header.className = 'load-card-header';
+    var titulo = document.createElement('span');
+    titulo.className = 'load-card-title';
+    titulo.innerHTML = '&#9889; Item #' + (index + 1) + ' &mdash; ' + nomeVal;
+    header.appendChild(titulo);
+    if (cargas.length > 1) {
+      var btnR = document.createElement('button');
+      btnR.innerHTML = '&#128465; Remover';
+      (function(id) { btnR.addEventListener('click', function() { removerCarga(id); }); })(cargaId);
+      header.appendChild(btnR);
+    }
+    card.appendChild(header);
+
+    // Nome
+    var grpNome = document.createElement('div');
+    grpNome.className = 'form-group';
+    var lblN = document.createElement('label'); lblN.textContent = 'Nome da Carga';
+    var inpN = document.createElement('input'); inpN.type = 'text'; inpN.value = nomeVal;
+    (function(id) { inpN.addEventListener('change', function() { atualizarCarga(id, 'nome', this.value); }); })(cargaId);
+    grpNome.appendChild(lblN); grpNome.appendChild(inpN);
+    card.appendChild(grpNome);
+
+    // Tipo + Modo
+    var rowTipo = document.createElement('div'); rowTipo.className = 'form-row';
+    var grpT = document.createElement('div'); grpT.className = 'form-group';
+    var lblT = document.createElement('label'); lblT.textContent = 'Tipo de Carga';
+    var selT = document.createElement('select');
+    [['motor','Motor'],['resistiva','Resistiva'],['nao_identificado','Geral']].forEach(function(o) {
+      var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1];
+      if (tipoCargaVal === o[0]) op.selected = true;
+      selT.appendChild(op);
+    });
+    (function(id) { selT.addEventListener('change', function() { atualizarCarga(id, 'tipoCarga', this.value); }); })(cargaId);
+    grpT.appendChild(lblT); grpT.appendChild(selT); rowTipo.appendChild(grpT);
+
+    var grpM = document.createElement('div'); grpM.className = 'form-group';
+    var lblM = document.createElement('label'); lblM.textContent = 'Modo';
+    var selM = document.createElement('select');
+    [['potencia','Potencia'],['corrente','Corrente (A)']].forEach(function(o) {
+      var op = document.createElement('option'); op.value = o[0]; op.textContent = o[1];
+      if (modoVal === o[0]) op.selected = true;
+      selM.appendChild(op);
+    });
+    (function(id) { selM.addEventListener('change', function() { atualizarCarga(id, 'modo', this.value); }); })(cargaId);
+    grpM.appendChild(lblM); grpM.appendChild(selM); rowTipo.appendChild(grpM);
+    card.appendChild(rowTipo);
+
+    // FP + Rendimento (motor)
+    if (tipoCargaVal === 'motor') {
+      var grpFP = document.createElement('div'); grpFP.className = 'form-group';
+      var lblFP = document.createElement('label'); lblFP.textContent = 'FP (cos phi)';
+      var fpCont = document.createElement('div'); fpCont.className = 'range-container';
+      var fpR = document.createElement('input'); fpR.type = 'range'; fpR.min = '0.15'; fpR.max = '1.00'; fpR.step = '0.01'; fpR.value = fpVal; fpR.id = 'fpRange_'+cargaId;
+      var fpN = document.createElement('input'); fpN.type = 'number'; fpN.min = '0.15'; fpN.max = '1.00'; fpN.step = '0.01'; fpN.value = fpVal.toFixed(2); fpN.style.width = '75px'; fpN.id = 'fpNum_'+cargaId;
+      (function(id) {
+        fpR.addEventListener('input', function() { syncCargaFP(id,'range',this.value); });
+        fpN.addEventListener('input', function() { syncCargaFP(id,'num',this.value); });
+      })(cargaId);
+      fpCont.appendChild(fpR); fpCont.appendChild(fpN);
+      grpFP.appendChild(lblFP); grpFP.appendChild(fpCont);
+      card.appendChild(grpFP);
+    }
+
+    container.appendChild(card);
+  });
+}
+
+// INICIALIZAR
+document.getElementById('status').textContent = 'Adicionando carga inicial...';
+adicionarCarga('Motor Bomba', 'motor', 'potencia', 5, 'HP', 0.85, 80, 1);
+</script>
+</body>
+</html>
